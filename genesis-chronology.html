@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis: The Chronology of Life</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root {
+    --ink: #050810;
+    --deep: #0a0f1e;
+    --ocean: #0d1f3c;
+    --teal: #0e4d5c;
+    --biolum: #00ffd5;
+    --amber: #ff8c42;
+    --rust: #c45c26;
+    --sand: #d4b483;
+    --bone: #e8dcc8;
+    --text-primary: #e8dcc8;
+    --text-dim: rgba(232,220,200,0.5);
+    --glass: rgba(255,255,255,0.04);
+    --glass-border: rgba(255,255,255,0.08);
+    font-size: clamp(14px, 1.5vw, 18px);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ink);
+    color: var(--text-primary);
+    font-family: 'Cormorant Garamond', serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* ── Custom Cursor ── */
+  #cursor {
+    position: fixed;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--biolum);
+    pointer-events: none;
+    z-index: 9999;
+    mix-blend-mode: screen;
+    transform: translate(-50%,-50%);
+    transition: width .3s, height .3s, background .3s;
+  }
+  #cursor-ring {
+    position: fixed;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,255,213,0.4);
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%,-50%);
+    transition: width .4s, height .4s, border-color .4s;
+  }
+  body:has(.era-card:hover) #cursor { width:20px; height:20px; background: var(--amber); }
+  body:has(.era-card:hover) #cursor-ring { width:60px; height:60px; border-color: rgba(255,140,66,0.5); }
+
+  /* ── Loading Screen ── */
+  #loader {
+    position: fixed; inset: 0;
+    background: var(--ink);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+  }
+  #loader-dna {
+    width: 60px; height: 120px;
+    position: relative;
+  }
+  .dna-strand {
+    position: absolute;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--biolum);
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 0 8px var(--biolum);
+  }
+  #loader-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: var(--text-dim);
+  }
+  #loader-bar {
+    width: 200px; height: 1px;
+    background: rgba(255,255,255,0.1);
+    position: relative;
+    overflow: hidden;
+  }
+  #loader-bar::after {
+    content: '';
+    position: absolute;
+    left: -100%; top: 0;
+    width: 100%; height: 100%;
+    background: var(--biolum);
+    animation: barSlide 2s ease-in-out forwards;
+  }
+  @keyframes barSlide {
+    to { left: 0; }
+  }
+
+  /* ── Canvas (Three.js) ── */
+  #three-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ── Navigation ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.5rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    mix-blend-mode: normal;
+  }
+  .nav-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .nav-chapters {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+  .nav-chapters a {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: color 0.3s;
+    position: relative;
+  }
+  .nav-chapters a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0;
+    width: 0; height: 1px;
+    background: var(--biolum);
+    transition: width 0.4s ease;
+  }
+  .nav-chapters a:hover { color: var(--biolum); }
+  .nav-chapters a:hover::after { width: 100%; }
+
+  /* ── Hero ── */
+  #hero {
+    position: relative;
+    z-index: 1;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+  }
+  .hero-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.4em;
+    color: var(--biolum);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+  }
+  .hero-title {
+    font-size: clamp(3rem, 8vw, 7rem);
+    font-weight: 300;
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+    color: var(--bone);
+    margin-bottom: 0.25rem;
+    opacity: 0;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--sand);
+  }
+  .hero-sub {
+    font-size: clamp(1rem, 2vw, 1.4rem);
+    font-weight: 300;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-bottom: 3rem;
+    opacity: 0;
+  }
+  .hero-scroll-hint {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    color: var(--text-dim);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    opacity: 0;
+  }
+  .scroll-line {
+    width: 1px; height: 60px;
+    background: linear-gradient(to bottom, var(--biolum), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 1; transform: scaleY(1); }
+    50% { opacity: 0.4; transform: scaleY(0.6); }
+  }
+
+  /* ── Chapters Common ── */
+  .chapter {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 6rem 3rem;
+  }
+  .chapter-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .chapter-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.4em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .chapter-number::before {
+    content: '';
+    display: block;
+    width: 40px; height: 1px;
+    background: currentColor;
+  }
+  .chapter-title {
+    font-size: clamp(2.5rem, 5vw, 5rem);
+    font-weight: 300;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.01em;
+  }
+  .chapter-body {
+    font-size: clamp(1rem, 1.5vw, 1.25rem);
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.8;
+    color: var(--text-dim);
+    max-width: 55ch;
+  }
+
+  /* ── Chapter 1: Primal Soup ── */
+  #ch1 { background: linear-gradient(180deg, transparent 0%, rgba(10,15,30,0.7) 100%); }
+  #ch1 .chapter-title { color: var(--biolum); }
+
+  .organism-field {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .micro-org {
+    position: absolute;
+    border-radius: 50%;
+    cursor: pointer;
+    pointer-events: all;
+    transition: transform 0.2s;
+  }
+  .micro-org:hover { transform: scale(1.5) !important; }
+
+  /* Particle canvas overlay per chapter */
+  .particle-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  /* ── Chapter 2: Deep Blue ── */
+  #ch2 { background: linear-gradient(180deg, rgba(10,31,60,0.8) 0%, rgba(13,45,80,0.9) 100%); }
+  #ch2 .chapter-title { color: #5bc8f5; }
+
+  .wave-container {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 200px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .wave {
+    position: absolute;
+    bottom: 0;
+    width: 200%;
+    height: 100%;
+    animation: waveMove 8s linear infinite;
+  }
+  .wave svg { width: 100%; height: 100%; }
+  .wave:nth-child(2) { animation-delay: -4s; opacity: 0.5; }
+
+  @keyframes waveMove {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* Fluid creature cards */
+  .sea-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+  .sea-card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    backdrop-filter: blur(12px);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s;
+    cursor: pointer;
+  }
+  .sea-card::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at center, rgba(91,200,245,0.08) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .sea-card:hover { transform: translateY(-8px); border-color: rgba(91,200,245,0.3); }
+  .sea-card:hover::before { opacity: 1; }
+  .sea-card-icon { font-size: 2.5rem; margin-bottom: 1rem; filter: drop-shadow(0 0 12px rgba(91,200,245,0.5)); }
+  .sea-card-name { font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; color: #5bc8f5; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .sea-card-desc { font-size: 0.9rem; color: var(--text-dim); font-style: italic; line-height: 1.6; }
+
+  /* ── Chapter 3: Great Migration ── */
+  #ch3 { background: linear-gradient(180deg, rgba(13,77,92,0.7) 0%, rgba(30,60,20,0.8) 100%); }
+  #ch3 .chapter-title { color: #7fc47a; }
+
+  .parallax-landscape {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .landscape-layer {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 120%;
+    will-change: transform;
+  }
+
+  .migration-track {
+    position: relative;
+    margin-top: 3rem;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: visible;
+  }
+  .migration-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #5bc8f5, #7fc47a);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.1s;
+  }
+  .migration-creature {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    filter: drop-shadow(0 0 8px rgba(127,196,122,0.6));
+    transition: left 0.1s;
+  }
+  .migration-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* ── Chapter 4: Age of Giants ── */
+  #ch4 { background: linear-gradient(180deg, rgba(20,40,10,0.8) 0%, rgba(50,20,5,0.9) 100%); }
+  #ch4 .chapter-title { color: var(--amber); }
+
+  .era-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+  .era-card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 2rem;
+    backdrop-filter: blur(12px);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s;
+  }
+  .era-card::after {
+    content: 'EXPLORE →';
+    position: absolute;
+    bottom: 1.5rem; right: 1.5rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .era-card:hover { transform: scale(1.03); border-color: rgba(255,140,66,0.4); }
+  .era-card:hover::after { opacity: 1; }
+  .era-card-age { font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.2em; color: var(--amber); text-transform: uppercase; margin-bottom: 0.5rem; }
+  .era-card-title { font-size: 1.6rem; font-weight: 300; margin-bottom: 0.75rem; }
+  .era-card-desc { font-size: 0.85rem; color: var(--text-dim); font-style: italic; line-height: 1.7; }
+  .era-card-dino { font-size: 4rem; position: absolute; top: 1.5rem; right: 1.5rem; opacity: 0.15; filter: sepia(1); transition: opacity 0.3s, transform 0.3s; }
+  .era-card:hover .era-card-dino { opacity: 0.4; transform: scale(1.1) rotate(-5deg); }
+
+  /* ── Chapter 5: Human Dawn ── */
+  #ch5 { background: linear-gradient(180deg, rgba(50,20,5,0.8) 0%, rgba(5,8,16,0.95) 100%); }
+  #ch5 .chapter-title { color: var(--sand); }
+
+  .evolution-timeline {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-top: 3rem;
+    padding: 2rem 0;
+    position: relative;
+  }
+  .evolution-timeline::before {
+    content: '';
+    position: absolute;
+    bottom: 2rem; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--text-dim), transparent);
+  }
+  .evo-step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .evo-step:hover { transform: translateY(-8px); }
+  .evo-icon { font-size: clamp(1.5rem, 3vw, 2.5rem); filter: grayscale(0.3); transition: filter 0.3s, transform 0.3s; }
+  .evo-step:hover .evo-icon { filter: grayscale(0) drop-shadow(0 0 12px rgba(212,180,131,0.6)); transform: scale(1.2); }
+  .evo-label { font-family: 'Space Mono', monospace; font-size: 0.5rem; letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase; text-align: center; }
+  .evo-year { font-size: 0.75rem; color: var(--sand); font-style: italic; }
+
+  /* ── Modal ── */
+  #modal-overlay {
+    position: fixed; inset: 0;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  #modal-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(5,8,16,0.85);
+    backdrop-filter: blur(20px);
+  }
+  #modal-box {
+    position: relative;
+    background: rgba(10,15,30,0.95);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 3rem;
+    max-width: 600px;
+    width: 100%;
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  #modal-close {
+    position: absolute;
+    top: 1.5rem; right: 1.5rem;
+    background: none; border: none;
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    transition: color 0.3s;
+  }
+  #modal-close:hover { color: var(--bone); }
+  #modal-tag { font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.3em; color: var(--amber); text-transform: uppercase; margin-bottom: 1rem; }
+  #modal-title { font-size: 2.5rem; font-weight: 300; margin-bottom: 1rem; }
+  #modal-body { font-size: 1rem; font-style: italic; color: var(--text-dim); line-height: 1.8; margin-bottom: 2rem; }
+  .modal-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  .modal-stat {
+    text-align: center;
+    padding: 1rem;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+  }
+  .modal-stat-val { font-size: 1.5rem; font-weight: 300; color: var(--amber); }
+  .modal-stat-key { font-family: 'Space Mono', monospace; font-size: 0.55rem; letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase; margin-top: 0.25rem; }
+
+  /* ── Reveal animations ── */
+  .reveal { opacity: 0; transform: translateY(40px); }
+
+  /* ── Progress bar ── */
+  #progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 0%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--biolum), var(--amber));
+    z-index: 500;
+    transition: width 0.1s;
+  }
+
+  /* ── Timeline sidebar ── */
+  #timeline-sidebar {
+    position: fixed;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+  .tl-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    cursor: pointer;
+    transition: background 0.3s, transform 0.3s;
+    position: relative;
+  }
+  .tl-dot.active { background: var(--biolum); transform: scale(1.5); }
+  .tl-dot::after {
+    content: attr(data-label);
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .tl-dot:hover::after, .tl-dot.active::after { opacity: 1; }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    nav { padding: 1.2rem 1.5rem; }
+    .nav-chapters { display: none; }
+    .chapter { padding: 5rem 1.5rem; }
+    .sea-grid { grid-template-columns: 1fr; }
+    .era-grid { grid-template-columns: 1fr; }
+    .evolution-timeline { gap: 0.5rem; }
+    .evo-label { font-size: 0.45rem; }
+    #timeline-sidebar { right: 1rem; }
+    .modal-stats { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 480px) {
+    .evolution-timeline { overflow-x: auto; padding-bottom: 1rem; }
+    .evo-step { min-width: 60px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Cursor -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- Progress -->
+<div id="progress-bar"></div>
+
+<!-- Loader -->
+<div id="loader">
+  <div id="loader-dna"></div>
+  <div id="loader-text">SEQUENCING GENOME · 3.8 BILLION YEARS</div>
+  <div id="loader-bar"></div>
+</div>
+
+<!-- Three.js canvas -->
+<canvas id="three-canvas"></canvas>
+
+<!-- Navigation -->
+<nav>
+  <div class="nav-logo">Genesis · Chronology of Life</div>
+  <ul class="nav-chapters">
+    <li><a href="#ch1">Primal Soup</a></li>
+    <li><a href="#ch2">Deep Blue</a></li>
+    <li><a href="#ch3">Migration</a></li>
+    <li><a href="#ch4">Giants</a></li>
+    <li><a href="#ch5">Human Dawn</a></li>
+  </ul>
+</nav>
+
+<!-- Timeline sidebar -->
+<div id="timeline-sidebar">
+  <div class="tl-dot active" data-label="Primal Soup" data-target="ch1"></div>
+  <div class="tl-dot" data-label="Deep Blue" data-target="ch2"></div>
+  <div class="tl-dot" data-label="Migration" data-target="ch3"></div>
+  <div class="tl-dot" data-label="Age of Giants" data-target="ch4"></div>
+  <div class="tl-dot" data-label="Human Dawn" data-target="ch5"></div>
+</div>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<section id="hero">
+  <p class="hero-eyebrow">3.8 Billion Years of History</p>
+  <h1 class="hero-title">Genesis<br><em>The Chronology of Life</em></h1>
+  <p class="hero-sub">From primordial chaos to human consciousness — scroll to begin</p>
+  <div class="hero-scroll-hint">
+    <span>SCROLL TO EXPLORE</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════ CH1: PRIMAL SOUP ═══════════════════ -->
+<section class="chapter" id="ch1">
+  <canvas class="particle-layer" id="primal-canvas"></canvas>
+  <div class="chapter-inner">
+    <div class="chapter-number reveal">Chapter I</div>
+    <h2 class="chapter-title reveal">The Primal<br>Soup</h2>
+    <p class="chapter-body reveal">
+      3.8 billion years ago, in the scalding mineral broth of Earth's nascent oceans, 
+      the first stirrings of life emerged — not with a thunderclap, but with a whisper. 
+      Self-replicating molecules, impossibly fragile, impossibly persistent, 
+      began the longest experiment in cosmic history.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════ CH2: DEEP BLUE ═══════════════════ -->
+<section class="chapter" id="ch2">
+  <div class="wave-container" aria-hidden="true">
+    <div class="wave">
+      <svg viewBox="0 0 1200 200" preserveAspectRatio="none">
+        <path d="M0,80 C150,120 350,40 600,80 C850,120 1050,40 1200,80 L1200,200 L0,200 Z" fill="rgba(13,31,60,0.6)"/>
+      </svg>
+    </div>
+    <div class="wave">
+      <svg viewBox="0 0 1200 200" preserveAspectRatio="none">
+        <path d="M0,100 C200,60 400,140 600,100 C800,60 1000,140 1200,100 L1200,200 L0,200 Z" fill="rgba(10,25,50,0.4)"/>
+      </svg>
+    </div>
+  </div>
+  <div class="chapter-inner">
+    <div class="chapter-number reveal">Chapter II</div>
+    <h2 class="chapter-title reveal">The Deep Blue</h2>
+    <p class="chapter-body reveal">
+      The Cambrian Explosion — 541 million years ago — shattered the silence. 
+      In a geological eye-blink, complex animal body plans erupted into existence. 
+      Eyes. Shells. Claws. The ocean became an arms race of breathtaking creativity.
+    </p>
+    <div class="sea-grid">
+      <div class="sea-card reveal" data-delay="0">
+        <div class="sea-card-icon">🦠</div>
+        <div class="sea-card-name">Cyanobacteria</div>
+        <div class="sea-card-desc">The original terraformers — oxygenating an entire planet over two billion years.</div>
+      </div>
+      <div class="sea-card reveal" data-delay="100">
+        <div class="sea-card-icon">🐚</div>
+        <div class="sea-card-name">Trilobita</div>
+        <div class="sea-card-desc">Masters of the ancient seas for 270 million years, wearing their skeletons outside.</div>
+      </div>
+      <div class="sea-card reveal" data-delay="200">
+        <div class="sea-card-icon">🦑</div>
+        <div class="sea-card-name">Nautiloids</div>
+        <div class="sea-card-desc">Living rockets of the Ordovician, using jet propulsion to hunt their prey.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ CH3: GREAT MIGRATION ═══════════════════ -->
+<section class="chapter" id="ch3">
+  <div class="parallax-landscape" aria-hidden="true">
+    <svg class="landscape-layer" id="land-back" style="bottom:-20px" viewBox="0 0 1400 300" preserveAspectRatio="xMidYMax slice">
+      <path d="M0,200 Q100,120 200,180 Q350,240 500,150 Q650,80 800,160 Q950,220 1100,140 Q1250,70 1400,160 L1400,300 L0,300 Z" fill="rgba(20,50,15,0.5)"/>
+    </svg>
+    <svg class="landscape-layer" id="land-mid" style="bottom:0" viewBox="0 0 1400 200" preserveAspectRatio="xMidYMax slice">
+      <path d="M0,100 Q200,50 400,90 Q600,130 800,70 Q1000,20 1200,80 Q1300,110 1400,90 L1400,200 L0,200 Z" fill="rgba(30,70,20,0.7)"/>
+    </svg>
+    <svg class="landscape-layer" id="land-fore" style="bottom:0" viewBox="0 0 1400 120" preserveAspectRatio="xMidYMax slice">
+      <path d="M0,60 Q350,20 700,50 Q1050,80 1400,40 L1400,120 L0,120 Z" fill="rgba(20,50,10,0.9)"/>
+    </svg>
+  </div>
+  <div class="chapter-inner">
+    <div class="chapter-number reveal">Chapter III</div>
+    <h2 class="chapter-title reveal">The Great<br>Migration</h2>
+    <p class="chapter-body reveal">
+      375 million years ago, a daring pioneer — Tiktaalik — hauled itself onto land. 
+      Not with legs, but with proto-limbs. The ocean's bounty was behind it. 
+      An entire empty world lay ahead.
+    </p>
+    <div class="migration-track reveal" id="migration-track">
+      <div class="migration-fill" id="migration-fill"></div>
+      <div class="migration-creature" id="migration-creature" style="left:0%">🐟</div>
+    </div>
+    <div class="migration-labels reveal">
+      <span>Ocean</span><span>Shoreline</span><span>Wetlands</span><span>Dry Land</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ CH4: AGE OF GIANTS ═══════════════════ -->
+<section class="chapter" id="ch4">
+  <div class="chapter-inner">
+    <div class="chapter-number reveal">Chapter IV</div>
+    <h2 class="chapter-title reveal">Age of<br>Giants</h2>
+    <p class="chapter-body reveal">
+      For 165 million years, dinosaurs were the undisputed architects of every ecosystem on Earth. 
+      From feathered velociraptors to thunder-lizards that shook the ground — 
+      they were not a dead end, but an explosion of life that still flies among us.
+    </p>
+    <div class="era-grid">
+      <div class="era-card reveal"
+        data-tag="Triassic Period"
+        data-title="The First Dynasties"
+        data-body="252–201 million years ago. Life rebounded from the Great Dying. Small, fast dinosaurs claimed their territory from surviving therapsids and archosaurs in a world still healing."
+        data-s1="252 Ma" data-s1k="Million Years Ago"
+        data-s2="~20°C" data-s2k="Avg Temperature"
+        data-s3="Pangaea" data-s3k="Continent">
+        <div class="era-card-dino">🦎</div>
+        <div class="era-card-age">Triassic · 252–201 Ma</div>
+        <div class="era-card-title">The First Dynasties</div>
+        <div class="era-card-desc">Life's comeback story — from the ashes of the Great Dying into a world ripe for conquest.</div>
+      </div>
+      <div class="era-card reveal"
+        data-tag="Jurassic Period"
+        data-title="Reign of the Sauropods"
+        data-body="201–145 million years ago. The supercontinent broke apart. Warm, humid jungles spread across the globe. Titanosaurs grew to lengths of 40 meters — the largest land animals that ever lived."
+        data-s1="201 Ma" data-s1k="Million Years Ago"
+        data-s2="30m+" data-s2k="Max Length"
+        data-s3="Pangaea Splits" data-s3k="Geology">
+        <div class="era-card-dino">🦕</div>
+        <div class="era-card-age">Jurassic · 201–145 Ma</div>
+        <div class="era-card-title">Reign of the Sauropods</div>
+        <div class="era-card-desc">Titans walked the Earth — long-necked giants that grazed the tops of 30-meter trees.</div>
+      </div>
+      <div class="era-card reveal"
+        data-tag="Cretaceous Period"
+        data-title="Age of Apex Predators"
+        data-body="145–66 million years ago. T. rex, Spinosaurus, mosasaurs ruled sea, land, and sky. Flowering plants emerged. Feathered dinosaurs diversified. Then — silence."
+        data-s1="145 Ma" data-s1k="Million Years Ago"
+        data-s2="12 tons" data-s2k="T. rex Weight"
+        data-s3="66 Ma Extinction" data-s3k="End Event">
+        <div class="era-card-dino">🦖</div>
+        <div class="era-card-age">Cretaceous · 145–66 Ma</div>
+        <div class="era-card-title">Age of Apex Predators</div>
+        <div class="era-card-desc">T. rex, flowers, feathers — and a six-mile-wide rock that ended everything.</div>
+      </div>
+      <div class="era-card reveal"
+        data-tag="The Survivors"
+        data-title="Feathered Descendants"
+        data-body="The asteroid that ended the non-avian dinosaurs also opened every ecological niche on Earth. The 10,000+ species of birds living today are the direct evolutionary descendants of theropod dinosaurs."
+        data-s1="10,000+" data-s1k="Living Species"
+        data-s2="Birds" data-s2k="Modern Form"
+        data-s3="Theropods" data-s3k="Lineage">
+        <div class="era-card-dino">🐦</div>
+        <div class="era-card-age">Modern · 66 Ma–Today</div>
+        <div class="era-card-title">Feathered Descendants</div>
+        <div class="era-card-desc">They never truly vanished. Every bird that sings is a living dinosaur.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ CH5: HUMAN DAWN ═══════════════════ -->
+<section class="chapter" id="ch5">
+  <div class="chapter-inner">
+    <div class="chapter-number reveal">Chapter V</div>
+    <h2 class="chapter-title reveal">The Human<br>Dawn</h2>
+    <p class="chapter-body reveal">
+      Seven million years ago, a lineage of apes in Africa began an extraordinary experiment. 
+      Bipedalism. Fire. Language. Art. Technology. 
+      In the final heartbeat of Earth's history, consciousness looked up at the stars and asked: <em>why?</em>
+    </p>
+    <div class="evolution-timeline reveal">
+      <div class="evo-step">
+        <div class="evo-icon">🐒</div>
+        <div class="evo-label">Ardipithecus</div>
+        <div class="evo-year">5.8 Ma</div>
+      </div>
+      <div class="evo-step">
+        <div class="evo-icon">🦴</div>
+        <div class="evo-label">Australopithecus</div>
+        <div class="evo-year">3.9 Ma</div>
+      </div>
+      <div class="evo-step">
+        <div class="evo-icon">🪨</div>
+        <div class="evo-label">H. habilis</div>
+        <div class="evo-year">2.4 Ma</div>
+      </div>
+      <div class="evo-step">
+        <div class="evo-icon">🔥</div>
+        <div class="evo-label">H. erectus</div>
+        <div class="evo-year">1.9 Ma</div>
+      </div>
+      <div class="evo-step">
+        <div class="evo-icon">🎨</div>
+        <div class="evo-label">H. sapiens</div>
+        <div class="evo-year">300 Ka</div>
+      </div>
+      <div class="evo-step">
+        <div class="evo-icon">🚀</div>
+        <div class="evo-label">Space Age</div>
+        <div class="evo-year">Today</div>
+      </div>
+    </div>
+    <p class="chapter-body reveal" style="margin-top:3rem; max-width: 100%; text-align:center; font-size: clamp(1.2rem, 2vw, 1.8rem); color: var(--sand);">
+      "We are a way for the cosmos to know itself."
+      <br><span style="font-family:'Space Mono',monospace; font-size:0.65rem; letter-spacing:0.2em; color: var(--text-dim);">— Carl Sagan</span>
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════ MODAL ═══════════════════ -->
+<div id="modal-overlay" role="dialog" aria-modal="true">
+  <div id="modal-backdrop"></div>
+  <div id="modal-box">
+    <button id="modal-close">✕ CLOSE</button>
+    <div id="modal-tag"></div>
+    <h3 id="modal-title"></h3>
+    <p id="modal-body"></p>
+    <div class="modal-stats">
+      <div class="modal-stat"><div class="modal-stat-val" id="ms1"></div><div class="modal-stat-key" id="ms1k"></div></div>
+      <div class="modal-stat"><div class="modal-stat-val" id="ms2"></div><div class="modal-stat-key" id="ms2k"></div></div>
+      <div class="modal-stat"><div class="modal-stat-val" id="ms3"></div><div class="modal-stat-key" id="ms3k"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  CURSOR
+// ═══════════════════════════════════════════
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx = 0, my = 0, rx = 0, ry = 0;
+
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+
+function animateCursor() {
+  cursor.style.left = mx + 'px';
+  cursor.style.top = my + 'px';
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) * 0.12;
+  ring.style.left = rx + 'px';
+  ring.style.top = ry + 'px';
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+// ═══════════════════════════════════════════
+//  THREE.JS BACKGROUND
+// ═══════════════════════════════════════════
+const canvas3d = document.getElementById('three-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas: canvas3d, alpha: true, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.z = 5;
+
+// Star field
+const starGeo = new THREE.BufferGeometry();
+const starCount = 800;
+const starPos = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount * 3; i++) starPos[i] = (Math.random() - 0.5) * 60;
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+const starMat = new THREE.PointsMaterial({ color: 0xd4b483, size: 0.04, transparent: true, opacity: 0.6 });
+const stars = new THREE.Points(starGeo, starMat);
+scene.add(stars);
+
+// Floating geometry – bioluminescent orbs
+const orbGroup = new THREE.Group();
+scene.add(orbGroup);
+const orbColors = [0x00ffd5, 0x5bc8f5, 0x7fc47a, 0xff8c42, 0xd4b483];
+
+for (let i = 0; i < 30; i++) {
+  const geo = new THREE.SphereGeometry(0.06 + Math.random() * 0.12, 8, 8);
+  const mat = new THREE.MeshBasicMaterial({
+    color: orbColors[i % orbColors.length],
+    transparent: true,
+    opacity: 0.15 + Math.random() * 0.25
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(
+    (Math.random() - 0.5) * 12,
+    (Math.random() - 0.5) * 8,
+    (Math.random() - 0.5) * 6
+  );
+  mesh.userData = {
+    speed: 0.003 + Math.random() * 0.007,
+    offset: Math.random() * Math.PI * 2,
+    amp: 0.3 + Math.random() * 0.5,
+    origY: mesh.position.y
+  };
+  orbGroup.add(mesh);
+}
+
+let scrollProgress = 0;
+window.addEventListener('scroll', () => {
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  scrollProgress = window.scrollY / max;
+  document.getElementById('progress-bar').style.width = (scrollProgress * 100) + '%';
+});
+
+const clock = new THREE.Clock();
+function render3d() {
+  requestAnimationFrame(render3d);
+  const t = clock.getElapsedTime();
+  stars.rotation.y = t * 0.01;
+  orbGroup.children.forEach(o => {
+    const ud = o.userData;
+    o.position.y = ud.origY + Math.sin(t * ud.speed * 60 + ud.offset) * ud.amp;
+    o.rotation.x = t * 0.3;
+    o.rotation.y = t * 0.5;
+  });
+
+  // Parallax camera on scroll
+  camera.position.x += (scrollProgress * 2 - camera.position.x) * 0.05;
+  camera.position.y += (-scrollProgress * 1.5 - camera.position.y) * 0.05;
+
+  renderer.render(scene, camera);
+}
+render3d();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ═══════════════════════════════════════════
+//  PRIMAL SOUP PARTICLE CANVAS (2D)
+// ═══════════════════════════════════════════
+const primalCanvas = document.getElementById('primal-canvas');
+const ctx = primalCanvas.getContext('2d');
+let particles = [];
+
+function resizePrimal() {
+  primalCanvas.width = primalCanvas.offsetWidth;
+  primalCanvas.height = primalCanvas.offsetHeight;
+}
+resizePrimal();
+
+class Particle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * primalCanvas.width;
+    this.y = Math.random() * primalCanvas.height;
+    this.r = 1 + Math.random() * 4;
+    this.vx = (Math.random() - 0.5) * 0.4;
+    this.vy = (Math.random() - 0.5) * 0.4;
+    this.alpha = 0.2 + Math.random() * 0.5;
+    this.hue = Math.random() > 0.5 ? '0,255,213' : '91,200,245';
+    this.pulse = Math.random() * Math.PI * 2;
+  }
+  update(t) {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.pulse += 0.02;
+    if (this.x < 0 || this.x > primalCanvas.width || this.y < 0 || this.y > primalCanvas.height) this.reset();
+  }
+  draw() {
+    const a = this.alpha * (0.7 + 0.3 * Math.sin(this.pulse));
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${this.hue},${a})`;
+    ctx.shadowColor = `rgba(${this.hue},0.8)`;
+    ctx.shadowBlur = 8;
+    ctx.fill();
+  }
+}
+
+for (let i = 0; i < 120; i++) particles.push(new Particle());
+
+let primalT = 0;
+function animatePrimal() {
+  requestAnimationFrame(animatePrimal);
+  ctx.clearRect(0, 0, primalCanvas.width, primalCanvas.height);
+  primalT += 0.016;
+  particles.forEach(p => { p.update(primalT); p.draw(); });
+  // Draw connections
+  ctx.shadowBlur = 0;
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 80) {
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(0,255,213,${0.08 * (1 - dist/80)})`;
+        ctx.lineWidth = 0.5;
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+}
+animatePrimal();
+
+// Mouse vibrate effect on Ch1
+let mouseOnCh1 = false;
+document.getElementById('ch1').addEventListener('mousemove', e => {
+  const rect = primalCanvas.getBoundingClientRect();
+  const mx2 = e.clientX - rect.left;
+  const my2 = e.clientY - rect.top;
+  particles.forEach(p => {
+    const dx = p.x - mx2, dy = p.y - my2;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < 100) {
+      p.vx += dx / dist * 0.5;
+      p.vy += dy / dist * 0.5;
+      p.vx *= 0.85;
+      p.vy *= 0.85;
+    }
+  });
+});
+
+// ═══════════════════════════════════════════
+//  GSAP ANIMATIONS
+// ═══════════════════════════════════════════
+gsap.registerPlugin(ScrollTrigger);
+
+// Hero entrance
+const heroTl = gsap.timeline({ delay: 2.5 });
+heroTl
+  .to('.hero-eyebrow', { opacity: 1, y: 0, duration: 1, ease: 'power4.out' })
+  .to('.hero-title', { opacity: 1, y: 0, duration: 1.2, ease: 'expo.out' }, '-=0.6')
+  .to('.hero-sub', { opacity: 1, y: 0, duration: 1, ease: 'power3.out' }, '-=0.8')
+  .to('.hero-scroll-hint', { opacity: 1, duration: 0.8 }, '-=0.3');
+
+// Reveals
+document.querySelectorAll('.reveal').forEach((el, i) => {
+  const delay = el.dataset.delay ? parseInt(el.dataset.delay) / 1000 : 0;
+  gsap.fromTo(el,
+    { opacity: 0, y: 50 },
+    {
+      opacity: 1, y: 0,
+      duration: 1.2,
+      ease: 'expo.out',
+      delay,
+      scrollTrigger: {
+        trigger: el,
+        start: 'top 85%',
+        toggleActions: 'play none none none'
+      }
+    }
+  );
+});
+
+// Migration scroll animation
+ScrollTrigger.create({
+  trigger: '#ch3',
+  start: 'top center',
+  end: 'bottom center',
+  onUpdate: self => {
+    const pct = Math.min(self.progress * 120, 100);
+    document.getElementById('migration-fill').style.width = pct + '%';
+    document.getElementById('migration-creature').style.left = pct + '%';
+    const emojis = ['🐟','🐠','🦎','🦎','🦎'];
+    const idx = Math.floor(pct / 25);
+    document.getElementById('migration-creature').textContent = emojis[Math.min(idx, 4)];
+  }
+});
+
+// Parallax landscape layers
+gsap.to('#land-back', {
+  x: -60,
+  ease: 'none',
+  scrollTrigger: { trigger: '#ch3', start: 'top bottom', end: 'bottom top', scrub: true }
+});
+gsap.to('#land-mid', {
+  x: -120,
+  ease: 'none',
+  scrollTrigger: { trigger: '#ch3', start: 'top bottom', end: 'bottom top', scrub: true }
+});
+gsap.to('#land-fore', {
+  x: -200,
+  ease: 'none',
+  scrollTrigger: { trigger: '#ch3', start: 'top bottom', end: 'bottom top', scrub: true }
+});
+
+// Scale-in era cards
+gsap.utils.toArray('.era-card').forEach((card, i) => {
+  gsap.fromTo(card,
+    { scale: 0.85, opacity: 0 },
+    {
+      scale: 1, opacity: 1,
+      duration: 0.8,
+      ease: 'back.out(1.5)',
+      delay: i * 0.1,
+      scrollTrigger: { trigger: card, start: 'top 90%', toggleActions: 'play none none none' }
+    }
+  );
+});
+
+// Evolution steps stagger
+ScrollTrigger.create({
+  trigger: '.evolution-timeline',
+  start: 'top 80%',
+  onEnter: () => {
+    gsap.fromTo('.evo-step',
+      { y: 30, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out', stagger: 0.12 }
+    );
+  }
+});
+
+// Timeline sidebar visibility
+ScrollTrigger.create({
+  trigger: '#ch1',
+  start: 'top center',
+  onEnter: () => gsap.to('#timeline-sidebar', { opacity: 1, duration: 0.5 })
+});
+
+// Active dot tracking
+const chapters = ['ch1','ch2','ch3','ch4','ch5'];
+const dots = document.querySelectorAll('.tl-dot');
+chapters.forEach((id, i) => {
+  ScrollTrigger.create({
+    trigger: '#' + id,
+    start: 'top center',
+    end: 'bottom center',
+    onToggle: self => {
+      if (self.isActive) {
+        dots.forEach(d => d.classList.remove('active'));
+        dots[i].classList.add('active');
+      }
+    }
+  });
+});
+
+dots.forEach(dot => {
+  dot.addEventListener('click', () => {
+    document.getElementById(dot.dataset.target).scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+// ═══════════════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════════════
+const overlay = document.getElementById('modal-overlay');
+const box = document.getElementById('modal-box');
+
+document.querySelectorAll('.era-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.getElementById('modal-tag').textContent = card.dataset.tag;
+    document.getElementById('modal-title').textContent = card.dataset.title;
+    document.getElementById('modal-body').textContent = card.dataset.body;
+    document.getElementById('ms1').textContent = card.dataset.s1;
+    document.getElementById('ms1k').textContent = card.dataset.s1k;
+    document.getElementById('ms2').textContent = card.dataset.s2;
+    document.getElementById('ms2k').textContent = card.dataset.s2k;
+    document.getElementById('ms3').textContent = card.dataset.s3;
+    document.getElementById('ms3k').textContent = card.dataset.s3k;
+
+    overlay.style.display = 'flex';
+    gsap.to(box, { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.7)' });
+    gsap.from('#modal-tag, #modal-title, #modal-body, .modal-stat', {
+      y: 20, opacity: 0, duration: 0.5, ease: 'power3.out', stagger: 0.08, delay: 0.2
+    });
+  });
+});
+
+function closeModal() {
+  gsap.to(box, {
+    scale: 0.85, opacity: 0, duration: 0.4, ease: 'power3.in',
+    onComplete: () => { overlay.style.display = 'none'; }
+  });
+}
+
+document.getElementById('modal-close').addEventListener('click', closeModal);
+document.getElementById('modal-backdrop').addEventListener('click', closeModal);
+
+// ═══════════════════════════════════════════
+//  LOADER
+// ═══════════════════════════════════════════
+function buildDNA() {
+  const container = document.getElementById('loader-dna');
+  for (let i = 0; i < 12; i++) {
+    const strand = document.createElement('div');
+    strand.className = 'dna-strand';
+    strand.style.top = (i * 10) + 'px';
+    container.appendChild(strand);
+    gsap.to(strand, {
+      x: Math.sin(i * 0.8) * 20,
+      duration: 0.8 + i * 0.05,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut',
+      delay: i * 0.05
+    });
+  }
+}
+buildDNA();
+
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    gsap.to('#loader', {
+      opacity: 0, duration: 0.8, ease: 'power2.inOut',
+      onComplete: () => { document.getElementById('loader').style.display = 'none'; }
+    });
+  }, 2200);
+});
+
+// Resize primal canvas
+window.addEventListener('resize', resizePrimal);
+</script>
+</body>
+</html>
