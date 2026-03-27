@@ -185,14 +185,6 @@ This project is perfect for:
 | Edge | ✅ Full | Chromium-based |
 | IE 11 | ❌ No | Use modern browser |
 
-## 📝 Credits & Attribution
-
-Inspired by scientific documentaries and the wonder of evolutionary biology. Special thanks to:
-
-- Carl Sagan (featured quote)
-- GSAP and ScrollTrigger teams
-- Three.js community
-
 ## 📄 License
 
 This project is open source. Feel free to use, modify, and share!
@@ -206,12 +198,3 @@ Found a bug or have suggestions?
 3. Make your improvements
 4. Submit a pull request
 
-## 📧 Contact
-
-Have questions or feedback? Feel free to reach out!
-
----
-
-**Made with ❤️ and a lot of JavaScript**
-
-*"We are a way for the cosmos to know itself." — Carl Sagan*
